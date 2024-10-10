@@ -1,8 +1,16 @@
 package com.aluracursos.screenmatch.modelos;
+
+import com.aluracursos.screenmatch.excepcion.ErrorEnConversionDuracionExcepcion;
+import com.google.gson.annotations.SerializedName;
+
 // necesita implementar esta interface para comparar Titulos.
 //por default solo se pueden comparar strings y numeros
 public class Titulo implements Comparable<Titulo> {
+    // SerializedName para convertir json a clase y que convierta atributo Title -> nombre
+    // ya no se necesitas con la aplicacion del record TituloOMDB
+    // @SerializedName("Title")
     private String nombre;
+    // @SerializedName("Year")
     private int fechaDeLanzamiento;
     private int duracionEnMinutos;
     private boolean incluidoEnElPlan;
@@ -13,6 +21,22 @@ public class Titulo implements Comparable<Titulo> {
     public Titulo(String nombre, int fechaDeLanzamiento) {
         this.nombre = nombre;
         this.fechaDeLanzamiento = fechaDeLanzamiento;
+    }
+    // nuevo constructor que reciba record.
+    // Un paso para convertir json de la API a  clase Titulo
+    public Titulo(TituloOMDB miTituloOMDB) {
+        this.nombre = miTituloOMDB.title();
+        this.fechaDeLanzamiento = Integer.valueOf(miTituloOMDB.year());
+
+        if (miTituloOMDB.runtime().contains("N/A")){
+            throw new ErrorEnConversionDuracionExcepcion("No se pudo convertir" +
+                    " porque la duracion contiene N/A en runtime");
+        }
+
+        this.duracionEnMinutos = Integer.valueOf(miTituloOMDB.runtime()
+                .substring(0,3).replace(" ",""));
+        // obtiene el primer valor hasta el tercero, p.e. 120 min -> 120
+        // replace para peliculas con dos digitos, p.e, 80 -> "80 "
     }
 
     // Generate Getter/Setter para crear metodos publicos que usan atributos privados
@@ -73,7 +97,14 @@ public class Titulo implements Comparable<Titulo> {
         return this.getNombre().compareTo(otroTitulo.getNombre());
     }
 
-//    Ejemplo ordenacion descendente, para ascendente cambia signos en los 1
+    @Override
+    public String toString() {
+        return
+                "(nombre='" + nombre +
+                ", fechaDeLanzamiento=" + fechaDeLanzamiento +
+                "duracion="  + duracionEnMinutos + ")";
+    }
+    //    Ejemplo ordenacion descendente, para ascendente cambia signos en los 1
 //    @Override
 //    public int compareTo(Cuenta otra) {
 //        if (this.saldo < otra.saldo) {
